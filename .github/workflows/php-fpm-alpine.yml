@@ -53,11 +53,7 @@ jobs:
           push: true
           file: Dockerfile.php-fpm
           target: app-dev # https://github.com/docker/build-push-action/blob/master/docs/advanced/isolated-builders.md
-          build-args:
-            - COMPOSER_AUTH="{}"
-            - APP_BASE_DIR="${{ secrets.APP_BASE_DIR }}"
-            - PHP_VERSION="${{ secrets.PHP7_VERSION }}"
-            - NEW_UID="${{ secrets.NEW_UID }}"
+          build-args: COMPOSER_AUTH="{}",APP_BASE_DIR="${{ secrets.APP_BASE_DIR }}",PHP_VERSION="${{ secrets.PHP7_VERSION }}",NEW_UID="${{ secrets.NEW_UID }}"
           tags: |
             grengojbo/php-fpm-alpine:7.4-dev
             ghcr.io/grengojbo/php-fpm-alpine:7.4-dev
