@@ -28,5 +28,5 @@ jobs:
       - name: Hadolint Action
         uses: hadolint/hadolint-action@v1.6.0
         with:
-          dockerfile: Dockerfile
+          dockerfile: Dockerfile.php-fpm
           ignore: DL3018 SC2086 DL3019
