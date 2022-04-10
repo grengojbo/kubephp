@@ -2,9 +2,14 @@
 set -eu
 # Put Custom Ad-hoc scripts after build. Like framework specific checks, etc.
 
-# Install Public Assets if they're not generated.
-echo "► Running Composer Install..."
-composer install
+# install_laravel() {
+# 	# Download laravel LTS framework (https://github.com/laravel/laravel/releases)
+# 	LARAVEL_VERSION_NO=${LARAVEL_VERSION_NO:-9.1.4}
 
-echo "► Checking Platform Requirements"
-composer check-platform-reqs
+# 	cd ${HOME}
+# 	curl -L https://github.com/laravel/laravel/archive/v${LARAVEL_VERSION_NO}.tar.gz | tar xz
+# 	mkdir -p /app/app
+# 	mv laravel-${LARAVEL_VERSION_NO}/* /app/
+# 	cp /app/.env.example /app/.env
+# 	cd /app/
+# }

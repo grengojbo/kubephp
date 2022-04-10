@@ -21,7 +21,7 @@ FROM php:${PHP_VERSION}-fpm-alpine AS base
 ARG XDEBUG_VERSION
 
 # Maintainer label
-LABEL maintainer="sherifabdlnaby@gmail.com"
+LABEL maintainer="oleg.dolya@gmail.com"
 
 # Set SHELL flags for RUN commands to allow -e and pipefail
 # Rationale: https://github.com/hadolint/hadolint/wiki/DL4006
@@ -29,7 +29,7 @@ SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
 
 # ------------------------------------- Install Packages Needed Inside Base Image --------------------------------------
 
-RUN IMAGE_DEPS="tini gettext"; \
+RUN IMAGE_DEPS="tini gettext bash"; \
     RUNTIME_DEPS="fcgi"; \
     apk add --no-cache ${IMAGE_DEPS} ${RUNTIME_DEPS}
 
@@ -37,20 +37,61 @@ RUN IMAGE_DEPS="tini gettext"; \
 
 
 RUN apk add --no-cache --virtual .build-deps \
-      $PHPIZE_DEPS  \
-      libzip-dev    \
-      icu-dev       \
+    $PHPIZE_DEPS  \
+    libzip-dev    \
+    icu-dev       \
+    # add other  \
+    imagemagick-dev \
+    imagemagick \
+    gettext-dev \
+    libxslt-dev \
+    libmcrypt-dev \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    jpeg-dev \
+    libpng-dev \
+    git \
+    unzip \
+    openssl \
+    # libz-dev \
+    gnupg \
+		g++ make autoconf \
  # PHP Extensions --------------------------------- \
  && docker-php-ext-install -j$(nproc) \
-      intl        \
-      opcache     \
-      pdo_mysql   \
-      zip         \
+    intl        \
+    zip         \
+    soap        \
+    curl        \
+    bcmath      \
+    exif        \
+    gd          \
+    iconv       \
+    mbstring    \
+    opcache     \
+    pdo         \
+    pdo_mysql   \
+    mysqli      \
+    mongodb     \
+    pdo_pgsql   \
+    # add other \
+    tokenizer   \
+    xml         \
+    pcntl       \
+    gettext     \
+    sockets     \
+    # bz2         \
+    calendar    \
+    xsl         \
  # Pecl Extensions -------------------------------- \
  && pecl install apcu && docker-php-ext-enable apcu \
+ && pecl install mcrypt redis \
  # ---------------------------------------------------------------------
  # Install Xdebug at this step to make editing dev image cache-friendly, we delete xdebug from production image later
- && pecl install xdebug-${XDEBUG_VERSION} \
+ # && pecl install xdebug-${XDEBUG_VERSION} \
+ # Install GD ------------------------------------- \
+ && docker-php-ext-configure gd --with-freetype=/usr/lib/ --with-jpeg=/usr/lib/ \
+ && docker-php-ext-install gd \
+ && docker-php-ext-enable redis \
  # Cleanup ---------------------------------------- \
  && rm -r /tmp/pear; \
  # - Detect Runtime Dependencies of the installed extensions. \
@@ -96,7 +137,6 @@ COPY docker/php/base-*   $PHP_INI_DIR/conf.d
 # PHP-FPM config
 COPY docker/fpm/*.conf  /usr/local/etc/php-fpm.d/
 
-
 # --------------------------------------------------- Scripts ----------------------------------------------------------
 
 COPY docker/*-base          \
@@ -137,26 +177,28 @@ CMD ["php-fpm"]
 # ---------------  This stage will install composer runtime dependinces and install app dependinces.  ------------------
 # ======================================================================================================================
 
-FROM composer as vendor
+# FROM composer as vendor
 
-ARG PHP_VERSION
-ARG COMPOSER_AUTH
-ARG APP_BASE_DIR
+# ARG PHP_VERSION
+# ARG COMPOSER_AUTH
+# ARG APP_BASE_DIR
 
-# A Json Object with remote repository token to clone private Repos with composer
-# Reference: https://getcomposer.org/doc/03-cli.md#composer-auth
-ENV COMPOSER_AUTH $COMPOSER_AUTH
+# # A Json Object with remote repository token to clone private Repos with composer
+# # Reference: https://getcomposer.org/doc/03-cli.md#composer-auth
+# ENV COMPOSER_AUTH $COMPOSER_AUTH
 
-WORKDIR /app
+# WORKDIR /app
 
-# Copy Dependencies files
-COPY $APP_BASE_DIR/composer.json composer.json
-COPY $APP_BASE_DIR/composer.lock composer.lock
+# # Copy Dependencies files
+# COPY $APP_BASE_DIR/composer.json composer.json
+# COPY $APP_BASE_DIR/composer.lock composer.lock
 
-    # Set PHP Version of the Image
-RUN composer config platform.php ${PHP_VERSION}; \
-    # Install Dependencies
-    composer install -n --no-progress --ignore-platform-reqs --no-dev --prefer-dist --no-scripts --no-autoloader
+#     # Set PHP Version of the Image
+# RUN composer config platform.php ${PHP_VERSION}; \
+#   # Install Dependencies
+#   composer install -n --no-progress --ignore-platform-reqs --no-dev --prefer-dist --no-scripts --no-autoloader \
+#   && rm -rf tests/ .git/ .github/ *.md && \
+#   rm -rf vendor/*/test/ vendor/*/tests/*
 
 # ======================================================================================================================
 # ==============================================  PRODUCTION IMAGE  ====================================================
@@ -169,28 +211,29 @@ ARG APP_BASE_DIR
 USER root
 
 # Copy Prod Scripts && delete xdebug
-COPY docker/*-prod /usr/local/bin/
-RUN  chmod +x /usr/local/bin/*-prod && pecl uninstall xdebug
+# COPY docker/*-prod /usr/local/bin/
+# RUN  chmod +x /usr/local/bin/*-prod && pecl uninstall xdebug
 
 # Copy PHP Production Configuration
 COPY docker/php/prod-*   $PHP_INI_DIR/conf.d/
 
 USER www-data
 
+ENV LOG_CHANNEL stderr
 # ----------------------------------------------- Production Config -----------------------------------------------------
 
 # Copy Vendor
-COPY --chown=www-data:www-data --from=vendor /app/vendor /app/vendor
+# COPY --chown=www-data:www-data --from=vendor /app/vendor /app/vendor
 
 # Copy App Code
-COPY --chown=www-data:www-data $APP_BASE_DIR/ .
+# COPY --chown=www-data:www-data $APP_BASE_DIR/ .
 
 ## Run Composer Install again
 ## ( this time to run post-install scripts, autoloader, and post-autoload scripts using one command )
-RUN post-build-base && post-build-prod
+# RUN post-build-base && post-build-prod
 
-ENTRYPOINT ["entrypoint-prod"]
-CMD ["php-fpm"]
+# ENTRYPOINT ["entrypoint-prod"]
+# CMD ["php-fpm"]
 
 # ======================================================================================================================
 # ==============================================  DEVELOPMENT IMAGE  ===================================================
@@ -202,14 +245,39 @@ FROM base as app-dev
 
 ENV APP_ENV dev
 ENV APP_DEBUG 1
+ENV LOG_CHANNEL stderr
 
 # Switch root to install stuff
 USER root
 
+# RUN curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.xz" \
+#     && tar -xJf "node-v$NODE_VERSION-linux-x64.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
+#     && rm "node-v$NODE_VERSION-linux-x64.tar.xz" \
+#     && ln -s /usr/local/bin/node /usr/local/bin/nodejs \
+#     && node -v \
+#     && npm -v  
+
+# # Set your timezone here
+# RUN rm /etc/localtime
+# RUN ln -s /usr/share/zoneinfo/Australia/Brisbane /etc/localtime
+# RUN "date"
+
 # For Composer Installs
-RUN apk --no-cache add git openssh; \
- # Enable Xdebug
- docker-php-ext-enable xdebug
+# RUN apk --no-cache add git openssh; \
+#  # Enable Xdebug
+#  docker-php-ext-enable xdebug
+RUN apk add --virtual .buildtime-deps ${PHPIZE_DEPS} \
+  && pecl install xdebug && docker-php-ext-enable xdebug \
+  # && pecl install xdebug-${XDEBUG_VERSION} && docker-php-ext-enable xdebug \
+  && apk del -f .buildtime-deps
+
+# Install Node.js (LTS version)
+RUN apk add --no-cache \
+  nodejs \
+  npm \
+  && node -v \
+  && npm -v \
+  && rm /var/cache/apk/*
 
 # For Xdebuger to work, it needs the docker host ID
 # - in Mac AND Windows, `host.docker.internal` resolve to Docker host IP
@@ -219,20 +287,29 @@ ENV XDEBUG_CLIENT_HOST="host.docker.internal"
 # ---------------------------------------------------- Scripts ---------------------------------------------------------
 
 # Copy Dev Scripts
-COPY docker/*-dev /usr/local/bin/
-RUN chmod +x /usr/local/bin/*-dev; \
-
-# ------------------------------------------------------ PHP -----------------------------------------------------------
-
-    mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
+# COPY docker/*-dev /usr/local/bin/
+# RUN chmod +x /usr/local/bin/*-dev; \
+#     mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 COPY docker/php/dev-*   $PHP_INI_DIR/conf.d/
+
+ARG NEW_UID="1000"
+# RUN deluser www-data && adduser -u ${NEW_UID} www-data && chown -R www-data:www-data /app
+# RUN deluser --remove-home www-data && adduser -u 502 -D www-data && chown -R www-data:www-data /app
+
+RUN if [ "${NEW_UID}" -ne "1000" ]; then \
+  echo "--------- NEW_UID: ${NEW_UID} --------" \
+  && deluser --remove-home www-data \
+  && adduser -u 502 -D www-data \
+  && chown -R www-data:www-data /app; \
+  fi
 
 USER www-data
 # ------------------------------------------------- Entry Point --------------------------------------------------------
 
 # Entrypoints
-ENTRYPOINT ["entrypoint-dev"]
+# ENTRYPOINT ["entrypoint-dev"]
 CMD ["php-fpm"]
 
 
@@ -241,46 +318,46 @@ CMD ["php-fpm"]
 #                                                  --- NGINX ---
 # ======================================================================================================================
 # ======================================================================================================================
-FROM nginx:${NGINX_VERSION}-alpine AS nginx
+# FROM nginx:${NGINX_VERSION}-alpine AS nginx
 
-RUN rm -rf /var/www/* /etc/nginx/conf.d/* && adduser -u 1000 -D -S -G www-data www-data
-COPY docker/nginx/nginx-*   /usr/local/bin/
-COPY docker/nginx/          /etc/nginx/
-RUN chown -R www-data /etc/nginx/ && chmod +x /usr/local/bin/nginx-*
+# RUN rm -rf /var/www/* /etc/nginx/conf.d/* && adduser -u 1000 -D -S -G www-data www-data
+# COPY docker/nginx/nginx-*   /usr/local/bin/
+# COPY docker/nginx/          /etc/nginx/
+# RUN chown -R www-data /etc/nginx/ && chmod +x /usr/local/bin/nginx-*
 
-# The PHP-FPM Host
-## Localhost is the sensible default assuming image run on a k8S Pod
-ENV PHP_FPM_HOST "localhost"
-ENV PHP_FPM_PORT "9000"
-ENV NGINX_LOG_FORMAT "json"
+# # The PHP-FPM Host
+# ## Localhost is the sensible default assuming image run on a k8S Pod
+# ENV PHP_FPM_HOST "localhost"
+# ENV PHP_FPM_PORT "9000"
+# ENV NGINX_LOG_FORMAT "json"
 
-# For Documentation
-EXPOSE 8080
+# # For Documentation
+# EXPOSE 8080
 
-# Switch User
-USER www-data
+# # Switch User
+# USER www-data
 
-# Add Healthcheck
-HEALTHCHECK CMD ["nginx-healthcheck"]
+# # Add Healthcheck
+# HEALTHCHECK CMD ["nginx-healthcheck"]
 
-# Add Entrypoint
-ENTRYPOINT ["nginx-entrypoint"]
+# # Add Entrypoint
+# ENTRYPOINT ["nginx-entrypoint"]
 
-# ======================================================================================================================
-#                                                 --- NGINX PROD ---
-# ======================================================================================================================
+# # ======================================================================================================================
+# #                                                 --- NGINX PROD ---
+# # ======================================================================================================================
 
-FROM nginx AS web
+# FROM nginx AS web
 
-# Copy Public folder + Assets that's going to be served from Nginx
-COPY --chown=www-data:www-data --from=app /app/public /app/public
+# # Copy Public folder + Assets that's going to be served from Nginx
+# COPY --chown=www-data:www-data --from=app /app/public /app/public
 
-# ======================================================================================================================
-#                                                 --- NGINX DEV ---
-# ======================================================================================================================
-FROM nginx AS web-dev
+# # ======================================================================================================================
+# #                                                 --- NGINX DEV ---
+# # ======================================================================================================================
+# FROM nginx AS web-dev
 
-ENV NGINX_LOG_FORMAT "combined"
+# ENV NGINX_LOG_FORMAT "combined"
 
-COPY --chown=www-data:www-data docker/nginx/dev/*.conf   /etc/nginx/conf.d/
-COPY --chown=www-data:www-data docker/nginx/dev/certs/   /etc/nginx/certs/
+# COPY --chown=www-data:www-data docker/nginx/dev/*.conf   /etc/nginx/conf.d/
+# COPY --chown=www-data:www-data docker/nginx/dev/certs/   /etc/nginx/certs/

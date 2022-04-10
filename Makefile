@@ -1,3 +1,31 @@
+# Использовать bash с опцией pipefail
+# pipefail - фейлит выполнение пайпа, если команда выполнилась с ошибкой
+#SHELL=/bin/bash -o pipefail
+# SHELL = /bin/bash
+
+# Примеры
+# https://github.com/FuzzyMonkeyCo/monkey/blob/master/Makefile
+
+CURRENT_DIR = $$(pwd)
+
+# Подготовка Makefile
+# https://habr.com/ru/post/449910/#makefile_preparation
+
+UNAME := $(shell uname)
+BUILD_DATE := $(shell date +%Y%m%d-%H%M)
+
+ifeq (,$(wildcard .env))
+  $(shell test ! -f example.env || cp example.env .env)
+endif
+
+ifeq (,$(wildcard .env))
+  $(shell exit 1)
+else
+	include .env
+	export $(shell sed 's/=.*//' .env)
+	# export
+endif
+
 .DEFAULT_GOAL:=help
 
 COMPOSE_PREFIX_CMD := DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
@@ -46,7 +74,8 @@ command-root:	 ## Execute command as root ( make command-root COMMAND=<command> 
 	@${COMPOSE_PREFIX_CMD} docker-compose run --rm -u root app ${COMMAND}
 
 shell-root:			## Enter container shell as root
-	@${COMPOSE_PREFIX_CMD} docker-compose exec -u root app /bin/bash
+	@${COMPOSE_PREFIX_CMD} docker-compose exec -u root app /bin/ash
+	@#${COMPOSE_PREFIX_CMD} docker-compose exec -u root app /bin/bash
 
 shell:			## Enter container shell
 	@${COMPOSE_PREFIX_CMD} docker-compose exec app /bin/bash

@@ -29,6 +29,15 @@
 </p>
 
 # Introduction
+
+PHP extension config dir
+
+/usr/local/etc/php/conf.d/
+
+extension=imagick.so
+
+bcmath bz2 calendar ctype curl dba dom enchant exif ffi fileinfo filter ftp gd gettext gmp hash iconv imap intl json ldap mbstring mysqli oci8 odbc opcache pcntl pdo pdo_dblib pdo_firebird pdo_mysql pdo_oci pdo_odbc pdo_pgsql pdo_sqlite pgsql phar posix pspell readline reflection session shmop simplexml snmp soap sockets sodium spl standard sysvmsg sysvsem sysvshm tidy tokenizer xml xmlreader xmlrpc xmlwriter xsl zend_test zip
+
 **Production Grade Image for PHP 7+ Applications** running **Nginx + PHP FPM** based on [PHP](https://hub.docker.com/_/php) & [Nginx](https://hub.docker.com/_/nginx) **Official Images**, compatible with popular PHP Frameworks such as [Laravel 5+](https://laravel.com/) & [Symfony 4+](https://symfony.com/) and their variants.
 
 - This is a pre-configured template image for your PHP Application, **and you shall extend and edit it according to your app requirements.** (instructions below)

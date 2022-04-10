@@ -15,6 +15,90 @@ set -e
 #
 # Ex:
 #   { echo ${DATABASE_URL};  echo "stdin input"; } | vendor/bin/<script that need stdin input>
+# 
+# RUN_PHP_COMPOSER=0
+# LARAVEL_VERSION_NO=none
+# UPSTREAM_FRAMEWORK=none
+# INIT_CONTAINER=0
 
+UPSTREAM_FRAMEWORK=${UPSTREAM_FRAMEWORK:-none}
+LARAVEL_VERSION_NO=${LARAVEL_VERSION_NO:-none}
+RUN_PHP_COMPOSER=${RUN_PHP_COMPOSER:-0}
+INIT_CONTAINER=${INIT_CONTAINER:-0}
+
+install_laravel() {
+	# Download laravel LTS framework (https://github.com/laravel/laravel/releases)
+	# LARAVEL_VERSION_NO=${LARAVEL_VERSION_NO:-9.1.4}
+
+	if [[ -f /app/composer.json ]]; then
+		echo "► Is installed ${UPSTREAM_FRAMEWORK}..."
+	else	
+		cd ${HOME}
+
+		if [[ "${LARAVEL_VERSION_NO}" != "none" ]]; then
+			curl -sL https://github.com/laravel/laravel/archive/v${LARAVEL_VERSION_NO}.tar.gz | tar xz
+			cp -r laravel-${LARAVEL_VERSION_NO}/* /app/
+			rm -Rf laravel-${LARAVEL_VERSION_NO}
+			# cp /app/.env.example /app/.env
+		else
+			composer create-project laravel/laravel laravel --no-progress
+			cp -r laravel/* /app/
+			rm -Rf laravel
+			
+			run_composer
+		fi
+		
+		
+		cd /app/
+	fi
+}
+
+install_yii2() {
+
+	if [[ -f /app/composer.json ]]; then
+		echo "► Is installed ${UPSTREAM_FRAMEWORK}..."
+	else	
+		cd ${HOME}
+
+		composer create-project --prefer-dist yiisoft/yii2-app-basic basic --no-progress
+		cp -r basic/* /app/
+		rm -Rf basic
+		
+		run_composer
+	
+		cd /app/
+	fi
+}
+
+run_composer() {
+	echo "► Running Composer Install..."
+	composer install --no-progress --optimize-autoloader
+
+	echo "► Checking Platform Requirements"
+	composer check-platform-reqs
+}
+
+
+
+if [[ "${UPSTREAM_FRAMEWORK}" != "none" ]]; then
+	echo "PHP framework: ${UPSTREAM_FRAMEWORK}"
+	if [[ "${UPSTREAM_FRAMEWORK}" == "laravel" ]]; then
+		install_laravel
+	fi
+fi
+
+if [[ "${INIT_CONTAINER}" == "1" ]]; then
+	echo "► Run initialize container..."
+	# Install Public Assets if they're not generated.
+	if [[ -f /app/composer.json ]]; then
+		if [[ ! -d /app/vendor ]]; then
+			run_composer
+		else
+			if [[ "${RUN_PHP_COMPOSER}" == "1" ]]; then
+				run_composer
+			fi
+		fi
+	fi
+fi
 
 # Put Custom Ad-hoc scripts below:
