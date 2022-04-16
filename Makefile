@@ -80,6 +80,9 @@ shell-root:			## Enter container shell as root
 shell:			## Enter container shell
 	@${COMPOSE_PREFIX_CMD} docker-compose exec app /bin/bash
 
+shell-web:	## Enter Nginx container shell
+	@${COMPOSE_PREFIX_CMD} docker-compose exec web /bin/ash
+
 restart:		## Restart container
 	@${COMPOSE_PREFIX_CMD} docker-compose restart
 

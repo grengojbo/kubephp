@@ -14,7 +14,7 @@ services:
         APP_BASE_DIR: ${APP_BASE_DIR:-src}
         PHP_VERSION: "${PHP_VERSION:-7.4}"
         # LARAVEL_VERSION_NO: ${LARAVEL_VERSION_NO:-9.1.4}
-        NEW_UID: "${NEW_UID:-1000}"
+        NEW_UID: "${NEW_UID:-1001}"
         # NGINX_VERSION: "1.20.1"
         # COMPOSER_VERSION: "2"
         # XDEBUG_VERSION: "3.1.3"
@@ -27,7 +27,7 @@ services:
       # - in Linux, `172.17.0.1` is the host IP
       XDEBUG_CLIENT_HOST: ${XDEBUG_CLIENT_HOST:-host.docker.internal}
       ENV_NAME: ${MODE:-dev}
-      UPSTREAM_FRAMEWORK: ${UPSTREAM_FRAMEWORK:-laravel-fpm}
+      UPSTREAM_FRAMEWORK: ${UPSTREAM_FRAMEWORK:-laravel}
       INIT_CONTAINER: ${INIT_CONTAINER:-0}
       # LARAVEL_VERSION_NO: ${LARAVEL_VERSION_NO:-9.1.4}
       COMPOSER_ALLOW_SUPERUSER: 1
@@ -35,20 +35,22 @@ services:
       - ${PWD}/src:/app
       # - ${PWD}/bin/post-build-dev:/home/www-data/post-build-dev
 
-  # web:
-  #   build:
-  #     context: .
-  #     target: web-dev
-  #     args:
-  #       APP_BASE_DIR: ${APP_BASE_DIR-.}
-  #   restart: unless-stopped
-  #   ports:
-  #     - 8080:8080
-  #   environment:
-  #     # The Hostname for the FPM (needs to match the hostname for the `app`)
-  #     PHP_FPM_HOST: app
-  #   volumes:
-  #     - ${PWD}/src/public:/app/public
-  #   depends_on:
-  #     app:
-  #       condition: service_healthy
+  web:
+    build:
+      context: .
+      # target: web-dev
+      target: nginx
+      dockerfile: Dockerfile.nginx
+      args:
+        APP_BASE_DIR: ${APP_BASE_DIR-.}
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    environment:
+      # The Hostname for the FPM (needs to match the hostname for the `app`)
+      PHP_FPM_HOST: app
+    volumes:
+      - ${PWD}/src/public:/app/public
+    depends_on:
+      app:
+        condition: service_healthy

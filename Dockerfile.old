@@ -294,14 +294,14 @@ RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
 COPY docker/php/dev-*   $PHP_INI_DIR/conf.d/
 
-ARG NEW_UID="1000"
+ARG NEW_UID="1001"
 # RUN deluser www-data && adduser -u ${NEW_UID} www-data && chown -R www-data:www-data /app
 # RUN deluser --remove-home www-data && adduser -u 502 -D www-data && chown -R www-data:www-data /app
 
-RUN if [ "${NEW_UID}" -ne "1000" ]; then \
+RUN if [ "${NEW_UID}" -ne "1001" ]; then \
   echo "--------- NEW_UID: ${NEW_UID} --------" \
   && deluser --remove-home www-data \
-  && adduser -u 502 -D www-data \
+  && adduser -u ${NEW_UID} -D www-data \
   && chown -R www-data:www-data /app; \
   fi
 

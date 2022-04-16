@@ -1,0 +1,67 @@
+# ---------------------------------------------- Build Time Arguments --------------------------------------------------
+ARG NGINX_VERSION="1.20.1"
+ARG COMPOSER_AUTH
+ARG APP_BASE_DIR="."
+
+
+# ARG NEW_UID="1001"
+# # RUN deluser www-data && adduser -u ${NEW_UID} www-data && chown -R www-data:www-data /app
+# # RUN deluser --remove-home www-data && adduser -u 502 -D www-data && chown -R www-data:www-data /app
+
+# RUN if [ "${NEW_UID}" -ne "1001" ]; then \
+#   echo "- NEW_UID: ${NEW_UID} -" \
+#   && deluser --remove-home www-data \
+#   && adduser -u 502 -D www-data \
+#   && chown -R www-data:www-data /app; \
+#   fi
+
+# USER www-data
+
+# ======================================================================================================================
+# ======================================================================================================================
+#                                                  --- NGINX ---
+# ======================================================================================================================
+# ======================================================================================================================
+FROM nginx:${NGINX_VERSION}-alpine AS nginx
+
+RUN rm -rf /var/www/* /etc/nginx/conf.d/* && adduser -u 1001 -D -S -G www-data www-data
+COPY docker/nginx/nginx-*   /usr/local/bin/
+COPY docker/nginx/          /etc/nginx/
+RUN chown -R www-data /etc/nginx/ && chmod +x /usr/local/bin/nginx-*
+
+# The PHP-FPM Host
+## Localhost is the sensible default assuming image run on a k8S Pod
+ENV PHP_FPM_HOST "localhost"
+ENV PHP_FPM_PORT "9000"
+ENV NGINX_LOG_FORMAT "json"
+
+# For Documentation
+EXPOSE 8080
+
+# Switch User
+USER www-data
+
+# Add Healthcheck
+HEALTHCHECK CMD ["nginx-healthcheck"]
+
+# Add Entrypoint
+ENTRYPOINT ["nginx-entrypoint"]
+
+# # ======================================================================================================================
+# #                                                 --- NGINX PROD ---
+# # ======================================================================================================================
+
+# FROM nginx AS web
+
+# # Copy Public folder + Assets that's going to be served from Nginx
+# COPY --chown=www-data:www-data --from=app /app/public /app/public
+
+# # ======================================================================================================================
+# #                                                 --- NGINX DEV ---
+# # ======================================================================================================================
+# FROM nginx AS web-dev
+
+# ENV NGINX_LOG_FORMAT "combined"
+
+# COPY --chown=www-data:www-data docker/nginx/dev/*.conf   /etc/nginx/conf.d/
+# COPY --chown=www-data:www-data docker/nginx/dev/certs/   /etc/nginx/certs/
