@@ -60,7 +60,7 @@ jobs:
           push: true
           file: Dockerfile.nginx
           target: nginx # https://github.com/docker/build-push-action/blob/master/docs/advanced/isolated-builders.md
-          build-args: NGINX_VERSION="1.21.6-alpine",NEW_UID="${{ secrets.NEW_UID }}"
+          build-args: NGINX_VERSION="1.21.6-alpine",NEW_UID="1001"
           tags: | 
             grengojbo/nginx:1.21.6-alpine
             ghcr.io/grengojbo/nginx:1.21.6-alpine
