@@ -43,6 +43,9 @@ services:
       dockerfile: Dockerfile.nginx
       args:
         APP_BASE_DIR: ${APP_BASE_DIR-.}
+        NGINX_CONTAINER_NAME: ${NGINX_CONTAINER_NAME:-nginx}
+        NGINX_VERSION: "${NGINX_VERSION:-1.21.6-alpine}"
+        NEW_UID: "{NEW_UID:-1001}"
     restart: unless-stopped
     ports:
       - 8080:8080
