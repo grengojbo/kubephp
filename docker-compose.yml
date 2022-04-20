@@ -54,6 +54,6 @@ services:
       PHP_FPM_HOST: app
     volumes:
       - ${PWD}/src/public:/app/public
-    depends_on:
-      app:
-        condition: service_healthy
+    # depends_on:
+    #   app:
+    #     condition: service_healthy
