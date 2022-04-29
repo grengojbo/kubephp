@@ -28,7 +28,36 @@
 	</a>
 </p>
 
-# Introduction
+# KubePHP
+
+Docker Image for Laravel, Yii2 framework
+
+Environments
+
+```bash
+XDEBUG_CLIENT_HOST=host.docker.internal
+ENV_NAME=dev
+COMPOSER_ALLOW_SUPERUSER=1
+UPSTREAM_FRAMEWORK=none
+LARAVEL_VERSION_NO=none
+RUN_PHP_COMPOSER=0
+INIT_CONTAINER=0
+```
+
+  - **UPSTREAM_FRAMEWORK** ( laravel | yii2 ) какой фреймворк установить если нет composer.json файла
+  - **LARAVEL_VERSION_NO=9.1.4** если не равно none то установливается определенная версия laravel
+  - **INIT_CONTAINER=1** запускаются инициализационные скрипты
+  - **RUN_PHP_COMPOSER=1** запуск ```composer install``` а затем запускаются инициализационные скрипты, только если **INIT_CONTAINER=1** 
+
+Docker Images: 
+  - grengojbo/php-fpm-alpine:7.4-dev
+  - grengojbo/php-fpm-alpine:7.4
+  - grengojbo/php-fpm-alpine:8.0-dev
+  - grengojbo/php-fpm-alpine:8.0
+
+С dev это для разработчиков, зеркало на https://github.com/grengojbo/kubephp/pkgs/container/php-fpm-alpine
+
+## Introduction
 
 
 Installed modules

@@ -85,6 +85,9 @@ if [[ "${UPSTREAM_FRAMEWORK}" != "none" ]]; then
 	if [[ "${UPSTREAM_FRAMEWORK}" == "laravel" ]]; then
 		install_laravel
 	fi
+	if [[ "${UPSTREAM_FRAMEWORK}" == "yii2" ]]; then
+		install_yii2
+	fi
 fi
 
 if [[ "${INIT_CONTAINER}" == "1" ]]; then
