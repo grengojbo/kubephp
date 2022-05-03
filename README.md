@@ -46,6 +46,7 @@ INIT_CONTAINER=0
 
   - **UPSTREAM_FRAMEWORK** ( laravel | yii2 ) какой фреймворк установить если нет composer.json файла
   - **LARAVEL_VERSION_NO=9.1.4** если не равно none то установливается определенная версия laravel
+  - **SYMFONY_SKELETON=website-skeleton** шаблон symfony [ website-skeleton | skeleton ]
   - **INIT_CONTAINER=1** запускаются инициализационные скрипты
   - **RUN_PHP_COMPOSER=1** запуск ```composer install``` а затем запускаются инициализационные скрипты, только если **INIT_CONTAINER=1** 
 
@@ -57,6 +58,17 @@ Docker Images:
 
 С dev это для разработчиков, зеркало на https://github.com/grengojbo/kubephp/pkgs/container/php-fpm-alpine
 
+## Nginx image
+
+Environments
+
+```bash
+ENABLED_ENVSUBST=false
+PHP_FPM_HOST=app
+```
+
+Docker Images: 
+ - grengojbo/nginx-alpine:1.21
 ## Introduction
 
 

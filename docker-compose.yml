@@ -44,7 +44,7 @@ services:
       args:
         APP_BASE_DIR: ${APP_BASE_DIR-.}
         NGINX_CONTAINER_NAME: ${NGINX_CONTAINER_NAME:-nginx}
-        NGINX_VERSION: "${NGINX_VERSION:-1.21.6-alpine}"
+        NGINX_VERSION: "${NGINX_VERSION:-1.21-alpine}"
         NEW_UID: "{NEW_UID:-1001}"
     restart: unless-stopped
     ports:
@@ -52,8 +52,9 @@ services:
     environment:
       # The Hostname for the FPM (needs to match the hostname for the `app`)
       PHP_FPM_HOST: app
+      ENABLED_ENVSUBST: false
     volumes:
       - ${PWD}/src/public:/app/public
-    depends_on:
-      app:
-        condition: service_healthy
+    # depends_on:
+    #   app:
+    #     condition: service_healthy
