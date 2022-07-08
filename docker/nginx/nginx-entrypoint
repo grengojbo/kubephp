@@ -1,8 +1,11 @@
 #!/bin/sh
 set -eu
 
+ENABLED_ENVSUBST=${ENABLED_ENVSUBST:-false}
 # Envsubset all files and only replace exported envs.
-for f in $(find /etc/nginx/ -name "*.conf"); do cat $f | envsubst "$(env | sed -e 's/=.*//' -e 's/^/\$/g')" > "$f.tmp"; mv "$f.tmp" "$f"; done
+if [[ "${ENABLED_ENVSUBST}" == "true" ]]; then
+	for f in $(find /etc/nginx/ -name "*.conf"); do cat $f | envsubst "$(env | sed -e 's/=.*//' -e 's/^/\$/g')" > "$f.tmp"; mv "$f.tmp" "$f"; done
+fi
 
 # Give FPM some time to warmup
 sleep 1

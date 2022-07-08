@@ -23,6 +23,7 @@ set -e
 
 UPSTREAM_FRAMEWORK=${UPSTREAM_FRAMEWORK:-none}
 LARAVEL_VERSION_NO=${LARAVEL_VERSION_NO:-none}
+SYMFONY_SKELETON=${SYMFONY_SKELETON:-website-skeleton}
 RUN_PHP_COMPOSER=${RUN_PHP_COMPOSER:-0}
 INIT_CONTAINER=${INIT_CONTAINER:-0}
 
@@ -70,6 +71,22 @@ install_yii2() {
 	fi
 }
 
+install_symfony() {
+
+
+	if [[ -f /app/composer.json ]]; then
+		echo "► Is installed ${UPSTREAM_FRAMEWORK}..."
+	else	
+		cd /app
+
+		composer create-project symfony/${SYMFONY_SKELETON} . --no-progress
+		
+		run_composer
+	
+		cd /app/
+	fi
+}
+
 run_composer() {
 	echo "► Running Composer Install..."
 	composer install --no-progress --optimize-autoloader
@@ -82,8 +99,17 @@ run_composer() {
 
 if [[ "${UPSTREAM_FRAMEWORK}" != "none" ]]; then
 	echo "PHP framework: ${UPSTREAM_FRAMEWORK}"
+	
 	if [[ "${UPSTREAM_FRAMEWORK}" == "laravel" ]]; then
 		install_laravel
+	fi
+	
+	if [[ "${UPSTREAM_FRAMEWORK}" == "yii2" ]]; then
+		install_yii2
+	fi
+	
+	if [[ "${UPSTREAM_FRAMEWORK}" == "symfony" ]]; then
+		install_symfony
 	fi
 fi
 
