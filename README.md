@@ -68,13 +68,13 @@ PHP_FPM_HOST=app
 ```
 
 Docker Images: 
- - grengojbo/nginx-alpine:1.21
+ - grengojbo/nginx:stable-alpine
 ## Introduction
 
 
 Installed modules
 
-```
+```ini
 [PHP Modules]
 apcu
 bcmath
